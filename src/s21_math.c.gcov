@@ -1,0 +1,319 @@
+        -:    0:Source:s21_math.c
+        -:    0:Graph:s21_math.gcno
+        -:    0:Data:s21_math.gcda
+        -:    0:Runs:16
+        -:    1:#include "s21_math.h"
+        -:    2:
+       13:    3:int s21_abs(int x) {
+       13:    4:  (0 > x) ? x = -x : x;
+       13:    5:  return x;
+        -:    6:}
+        -:    7:
+       10:    8:long double s21_acos(double x) {
+       10:    9:  long double res = 0;
+       10:   10:  if (1 < x || -1 > x || S21_INF == x || -S21_INF == x) {
+        4:   11:    res = S21_NAN;
+        -:   12:  } else {
+        6:   13:    res = S21_PI / 2 - s21_asin(x);
+        -:   14:  }
+       10:   15:  return res;
+        -:   16:}
+        -:   17:
+     3908:   18:long double s21_fabs(double x) {
+     3908:   19:  if (!s21_isnan(x)) {
+     3904:   20:    (0 > x) ? x = -x : x;
+        -:   21:  }
+     3908:   22:  return x;
+        -:   23:}
+        -:   24:
+       49:   25:long double s21_pow(double x, double exp) {
+       49:   26:  long double res = 0.0;
+       49:   27:  if (x == 1 && s21_isnan(exp)) {
+        1:   28:    res = 1;
+       48:   29:  } else if (s21_isnan(x) || s21_isnan(exp)) {
+        6:   30:    res = S21_NAN;
+       42:   31:  } else if (x == S21_INF || x == -S21_INF) {
+       18:   32:    if ((x == S21_INF && exp > S21_EPS) ||
+        9:   33:        (x == S21_OTR_INF && exp > S21_EPS &&
+        4:   34:         (exp - (long long int)exp != 0 || s21_fmod(exp, 2) == 0)))
+        7:   35:      res = S21_INF;
+       11:   36:    else if (exp > S21_EPS)
+        1:   37:      res = -S21_INF;
+       10:   38:    else if (exp < -S21_EPS)
+        8:   39:      res = 0.0;
+        -:   40:    else
+        2:   41:      res = 1.0;
+       24:   42:  } else if (exp == S21_INF || exp == S21_OTR_INF) {
+       14:   43:    if (x == 1 || x == -1)
+        4:   44:      res = 1;
+       19:   45:    else if ((x == 0 && exp == S21_OTR_INF) ||
+       15:   46:             (s21_fabs(x) > 1 && exp == S21_INF))
+        4:   47:      res = S21_INF;
+        6:   48:    else if (s21_fabs(x) < 1 && exp == S21_INF)
+        2:   49:      res = 0;
+        4:   50:    else if (s21_fabs(x) < 1 && exp == S21_OTR_INF)
+        1:   51:      res = S21_INF;
+        -:   52:  } else {
+       10:   53:    if (x < 0 && exp - (int)exp != 0)
+        2:   54:      res = S21_NAN;
+        -:   55:    else {
+        8:   56:      res = 1.0;
+        8:   57:      int a = s21_abs((int)exp);
+        8:   58:      if (s21_fabs(exp) - a == 0) {
+       10:   59:        while (a > 0) {
+        5:   60:          if (exp > 0)
+        2:   61:            res *= x;
+        -:   62:          else
+        3:   63:            res /= x;
+        5:   64:          a--;
+        -:   65:        }
+        -:   66:      } else {
+        3:   67:        res = s21_exp(exp * s21_log(s21_fabs(x)));
+        -:   68:      }
+        -:   69:    }
+        -:   70:  }
+       49:   71:  return res;
+        -:   72:}
+        -:   73:
+       15:   74:long double s21_exp(double x) {
+       15:   75:  long double res = 0;
+       15:   76:  if (x == S21_OTR_INF)
+        1:   77:    res = 0;
+       14:   78:  else if (s21_isnan(x))
+        1:   79:    res = x;
+       13:   80:  else if (MIN_DEGREE >= x)
+        1:   81:    res = 1e-310;
+       12:   82:  else if (S21_INF == x || MAX_DEGREE < x)
+        2:   83:    res = S21_INF;
+        -:   84:  else {
+       10:   85:    res = 1.0;
+       10:   86:    long double add = 1.0, i;
+     2148:   87:    for (i = 1.0; S21_EPS < add; i++) {
+     2138:   88:      add *= s21_fabs(x) / i;
+     2138:   89:      res += add;
+        -:   90:    }
+       10:   91:    if (x < 0) res = 1.0 / res;
+        -:   92:  }
+       15:   93:  return res;
+        -:   94:}
+        -:   95:
+       12:   96:long double s21_log(double x) {
+       12:   97:  long double res = 0.0;
+       12:   98:  if (x != x)
+        1:   99:    res = S21_NAN;
+       11:  100:  else if (0.0 == x)
+        2:  101:    res = -S21_INF;
+        9:  102:  else if (S21_INF == x)
+        1:  103:    res = S21_INF;
+        8:  104:  else if (-S21_INF == x)
+        1:  105:    res = S21_NAN;
+        7:  106:  else if (2 == x)
+        1:  107:    res = 0.6931471805599453;
+        6:  108:  else if (0 < x) {
+        5:  109:    int i = 0;
+       10:  110:    while (1 < x) {
+        5:  111:      x /= 10;
+        5:  112:      i++;
+        -:  113:    }
+        5:  114:    x = x - 1.0;
+        5:  115:    long double add = x, n;
+     1150:  116:    for (n = 1.0; S21_EPS < s21_fabs(add); n++) {
+     1145:  117:      res += add / n;
+     1145:  118:      add *= -x;
+        -:  119:    }
+        5:  120:    res += i * LN10;
+        -:  121:  } else {
+        1:  122:    res = S21_NAN;
+        -:  123:  }
+       12:  124:  return res;
+        -:  125:}
+        -:  126:
+       19:  127:long double s21_sqrt(double x) {
+       19:  128:  long double res = 1.0;
+       19:  129:  if (0 > x || s21_isnan(x)) {
+        6:  130:    res = S21_NAN;
+       13:  131:  } else if (1.0 == x) {
+        4:  132:    res = 1.0;
+        9:  133:  } else if (0.0 == x) {
+        2:  134:    res = 0;
+        7:  135:  } else if (S21_INF == x) {
+        1:  136:    res = S21_INF;
+        -:  137:  } else {
+       33:  138:    for (;;) {
+       39:  139:      double tmp = (res + x / res) / 2;
+       39:  140:      if (s21_fabs(res - tmp) < S21_EPS) break;
+       33:  141:      res = tmp;
+        -:  142:    }
+        -:  143:  }
+       19:  144:  return res;
+        -:  145:}
+        -:  146:
+        9:  147:long double s21_ceil(double x) {
+        -:  148:  long double res;
+        9:  149:  if (s21_isnan(x))
+        1:  150:    res = x;
+        8:  151:  else if (S21_INF == x)
+        1:  152:    res = S21_INF;
+        7:  153:  else if (S21_OTR_INF == x)
+        1:  154:    res = S21_OTR_INF;
+        -:  155:  else {
+        6:  156:    long double diff = x - (long long int)x;
+        6:  157:    if (S21_EPS > diff && -S21_EPS < diff) {
+        4:  158:      res = x;
+        2:  159:    } else if (0 < x) {
+        1:  160:      res = (long long int)x + 1;
+        -:  161:    } else {
+        1:  162:      res = (long long int)x;
+        -:  163:    }
+        -:  164:  }
+        9:  165:  return res;
+        -:  166:}
+        -:  167:
+       12:  168:long double s21_floor(double x) {
+       12:  169:  long double res = 0.0;
+       12:  170:  if (s21_isnan(x))
+        1:  171:    res = x;
+       11:  172:  else if (x == S21_INF)
+        1:  173:    res = S21_INF;
+       10:  174:  else if (x == S21_OTR_INF)
+        1:  175:    res = S21_OTR_INF;
+        -:  176:  else {
+        9:  177:    long double diff = x - (long long int)x;
+        9:  178:    if (S21_EPS > diff && diff > -S21_EPS) {
+        7:  179:      res = x;
+        2:  180:    } else if (x > 0)
+        1:  181:      res = (long long int)x;
+        -:  182:    else
+        1:  183:      res = (long long int)x - 1;
+        -:  184:  }
+       12:  185:  return res;
+        -:  186:}
+        -:  187:
+       59:  188:long double s21_fmod(double x, double y) {
+       59:  189:  long double res = 0.0;
+       59:  190:  if ((y == S21_INF || y == S21_OTR_INF) &&
+       12:  191:      !(x == S21_INF || x == S21_OTR_INF)) {
+       10:  192:    res = x;
+       49:  193:  } else if (s21_fabs(y) <= S21_EPS && !s21_isnan(x)) {
+        4:  194:    res = S21_NAN;
+       45:  195:  } else if ((x == S21_INF || x == S21_OTR_INF) && !s21_isnan(x) &&
+        2:  196:             (!s21_isnan(y) || (y == S21_INF || y == S21_OTR_INF))) {
+       17:  197:    res = S21_NAN;
+       28:  198:  } else if (s21_isnan(x) || s21_isnan(y)) {
+        4:  199:    res = S21_NAN;
+       24:  200:  } else if (s21_fabs(x) <= S21_EPS && y != 0) {
+        8:  201:    res = x;
+        -:  202:  } else {
+       16:  203:    long long int i = x / y;
+       16:  204:    res = (long double)x - i * (long double)y;
+        -:  205:  }
+       59:  206:  return res;
+        -:  207:}
+        -:  208:
+       23:  209:long double s21_sin(double x) {
+       23:  210:  long double res = 0.;
+       23:  211:  if (s21_isnan(x) || x == S21_INF || x == -S21_INF)
+        4:  212:    res = S21_NAN;
+        -:  213:  else {
+       19:  214:    if (S21_PI == x) {
+        1:  215:      res = S21_EPS;
+       18:  216:    } else if (-S21_PI == x)
+        1:  217:      res = -S21_EPS;
+        -:  218:    else {
+       17:  219:      if (0 < x) {
+        8:  220:        x = x - ((int)(x / (2 * S21_PI)) * (2 * S21_PI));
+        9:  221:      } else if (0 > x) {
+        5:  222:        x = x - ((int)(x / (2 * -S21_PI)) * (2 * -S21_PI));
+        -:  223:      }
+        -:  224:      double i;
+       17:  225:      long double tmp = x;
+       17:  226:      res = x;
+      174:  227:      for (i = 1.; s21_fabs(tmp) > S21_EPS; i++) {
+      157:  228:        tmp *= ((-1.) * x * x / (2. * i * (2. * i + 1.)));
+      157:  229:        res += tmp;
+        -:  230:      }
+        -:  231:    }
+        -:  232:  }
+       23:  233:  return res;
+        -:  234:}
+        -:  235:
+       15:  236:long double s21_cos(double x) {
+       15:  237:  long double res = 0;
+       15:  238:  if (s21_isnan(x) || S21_INF == x || -S21_INF == x)
+        4:  239:    res = S21_NAN;
+        -:  240:  else {
+       11:  241:    x = s21_fmod(x, 2 * S21_PI);
+       11:  242:    double i = 1.;
+       11:  243:    long double add = 1.;
+      117:  244:    for (i = 1.; S21_EPS < s21_fabs(add); i++) {
+      106:  245:      res += add;
+      106:  246:      add *= -x * x / (2 * i * (2 * i - 1));
+        -:  247:    }
+        -:  248:  }
+       15:  249:  return res;
+        -:  250:}
+        -:  251:
+       12:  252:long double s21_tan(double x) {
+       12:  253:  long double result = 0.0;
+       12:  254:  if (S21_OTR_INF == x || S21_INF == x) {
+        2:  255:    result = S21_NAN;
+       10:  256:  } else if (S21_PI / 2 == x) {
+        1:  257:    result = 16331239353195370.0;
+        9:  258:  } else if (-S21_PI / 2 == x) {
+        1:  259:    result = -16331239353195370.0;
+        -:  260:  } else {
+        8:  261:    result = s21_sin(x) / s21_cos(x);
+        -:  262:  }
+       12:  263:  return result;
+        -:  264:}
+        -:  265:
+       18:  266:long double s21_asin(double x) {
+       18:  267:  long double res = 0;
+       18:  268:  if (1 < x || -1 > x || S21_INF == x || -S21_INF == x) {
+        7:  269:    res = S21_NAN;
+       11:  270:  } else if (1 == x) {
+        1:  271:    res = S21_PI_HALF;
+       10:  272:  } else if (-1 == x) {
+        2:  273:    res = -S21_PI_HALF;
+        -:  274:  } else {
+        8:  275:    x = x / s21_sqrt(1 - x * x);
+        8:  276:    res = s21_atan(x);
+        -:  277:  }
+       18:  278:  return res;
+        -:  279:}
+        -:  280:
+       17:  281:long double s21_atan(double x) {
+       17:  282:  long double res = 0;
+       17:  283:  if (S21_INF == x) {
+        1:  284:    res = S21_PI_HALF;
+       16:  285:  } else if (S21_OTR_INF == x) {
+        1:  286:    res = -S21_PI_HALF;
+       15:  287:  } else if (s21_isnan(x)) {
+        3:  288:    res = S21_NAN;
+       12:  289:  } else if (1.0 == x) {
+        1:  290:    res = S21_PI_4;
+       11:  291:  } else if (-1.0 == x) {
+        1:  292:    res = -S21_PI_4;
+        -:  293:  } else {
+       10:  294:    int flag = 0;
+       10:  295:    if (1 < x || -1 > x) {
+        2:  296:      x = 1 / x;
+        2:  297:      if (0 > x) {
+        1:  298:        x = -x;
+        1:  299:        flag = 1;
+        -:  300:      } else {
+        1:  301:        flag = 2;
+        -:  302:      }
+        -:  303:    }
+       10:  304:    long double i, add = (long double)x;
+      180:  305:    for (i = 0; S21_EPS < s21_fabs(add); i++) {
+      170:  306:      res += add / (2 * i + 1);
+      170:  307:      add *= -x * x;
+        -:  308:    }
+       10:  309:    if (2 == flag)
+        1:  310:      res = -res + S21_PI_HALF;
+        9:  311:    else if (1 == flag)
+        1:  312:      res = res - S21_PI_HALF;
+        -:  313:  }
+       17:  314:  return res;
+        -:  315:}
